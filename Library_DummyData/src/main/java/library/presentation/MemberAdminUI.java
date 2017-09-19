@@ -151,7 +151,7 @@ public class MemberAdminUI extends javax.swing.JFrame {
     
     private void doFindMember(int membershipNr)
     {
-        currentMember = manager.detailsMember(membershipNr);
+        currentMember = manager.findMemberDetails(membershipNr);
         String memberInfo = "Lid niet gevonden";
         boolean memberCanBeRemoved = false;
         

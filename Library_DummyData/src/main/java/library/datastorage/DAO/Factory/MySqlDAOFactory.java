@@ -1,4 +1,7 @@
-package library.datastorage;
+package library.datastorage.DAO.Factory;
+
+import library.datastorage.DAO.Inf.*;
+import library.datastorage.DAO.MySql.*;
 
 public class MySqlDAOFactory implements DAOFactory
 {

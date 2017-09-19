@@ -1,4 +1,6 @@
-package library.datastorage;
+package library.datastorage.DAO.Factory;
+
+import library.datastorage.DAO.Inf.*;
 
 public class TestDataDAOFactory implements DAOFactory
 {

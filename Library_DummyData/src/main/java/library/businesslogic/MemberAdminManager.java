@@ -10,7 +10,11 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import library.datastorage.*;
+import library.datastorage.DAO.Factory.DAOFactory;
+import library.datastorage.DAO.Inf.BookDAOInf;
+import library.datastorage.DAO.Inf.MemberDAOInf;
+import library.datastorage.DAO.MySql.MySqlBookDAO;
+import library.datastorage.DAO.MySql.MySqlMemberDAO;
 import library.domain.*;
 
 /**
@@ -37,7 +41,7 @@ public class MemberAdminManager
 
     private void fillData()
     {
-        members = memberDAO.details();
+        members = memberDAO.findDetails();
     }
 
     private void fillTestData()
@@ -93,10 +97,9 @@ public class MemberAdminManager
         members.add(new Member(1004, "Maurice", "van Haperen", "", "", "", "", "", 0.0d));
     }
 
-    public Member detailsMember(int memberID)
+    public Member findMemberDetails(int memberID)
     {
         Member member = null;
-
         int index = 0;
 
         while (member == null && index < members.size())

@@ -24,44 +24,48 @@
  *
  */
 
-package library.datastorage;
+package library.datastorage.DAO.Inf;
 
-import library.domain.Book;
+import library.domain.Loan;
 
+import java.sql.Timestamp;
 import java.util.List;
 
-public interface BookDAOInf
+public interface LoanDAOInf
 {
-    /**
-     * View the details of all the books.
-     */
-    List<Book> details();
+	/**
+	 * View the details of all the loans.
+	 */
+     List<Loan> findDetails();
 
 	/**
-	 * View the details of the book.
+	 * View the details of the loan.
 	 *
-	 * @param ISBN	The ISBN of the book.
+	 * @param loanDate	The loan date of the reservation.
+	 * @param memberID	The member ID of the reservation.
+	 * @param copyID	The ID of the copy.
 	 */
-	Book details(long ISBN);
+	Loan findDetails(Timestamp loanDate, int memberID, int copyID);
 
 	/**
-	 * Creates a new book.
+	 * Creates a new loan.
 	 * 
-	 * @param book	The Book object.
+	 * @param loan	The Loan object.
 	 */
-	boolean create(Book book);
+	boolean create(Loan loan);
 
 	/**
-	 * Edit an existing book.
+	 * Edit an existing loan.
 	 * 
-	 * @param book	The Book object.
+	 * @param loan	The Loan object.
 	 */
-	boolean update(Book book);
+	boolean update(Loan loan);
 
 	/**
-	 *  Deletes an existing book.
-	 * 
-	 * @param ISBN	The ISBN of the book.
+	 *  Deletes an existing loan.
+	 *
+	 * @param memberID	The member ID of the reservation.
+	 * @param copyID	The ID of the copy.
 	 */
-	boolean delete(long ISBN);
+	boolean delete(int memberID, int copyID);
 }

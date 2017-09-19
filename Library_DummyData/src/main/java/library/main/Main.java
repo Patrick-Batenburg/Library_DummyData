@@ -5,8 +5,8 @@
 package library.main;
 
 import library.businesslogic.MemberAdminManager;
-import library.datastorage.DAOFactory;
-import library.datastorage.MySqlDAOFactory;
+import library.datastorage.DAO.Factory.DAOFactory;
+import library.datastorage.DAO.Factory.MySqlDAOFactory;
 import library.presentation.MemberAdminUI;
 
 /**

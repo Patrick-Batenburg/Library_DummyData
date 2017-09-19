@@ -1,32 +1,33 @@
 /*
+ * MIT License
  *
- *  * MIT License
- *  *
- *  * Copyright (c) 2017 Patrick van Batenburg
- *  *
- *  * Permission is hereby granted, free of charge, to any person obtaining a copy
- *  * of this software and associated documentation files (the "Software"), to deal
- *  * in the Software without restriction, including without limitation the rights
- *  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *  * copies of the Software, and to permit persons to whom the Software is
- *  * furnished to do so, subject to the following conditions:
- *  *
- *  * The above copyright notice and this permission notice shall be included in all
- *  * copies or substantial portions of the Software.
- *  *
- *  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- *  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- *  * SOFTWARE.
+ * Copyright (c) 2017 Patrick van Batenburg
  *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
-package library.datastorage;
+package library.datastorage.DAO.MySql;
 
-import library.domain.Book;
+import library.datastorage.DAO.Inf.CopyDAOInf;
+import library.datastorage.DAO.Inf.LoanDAOInf;
+import library.datastorage.DAO.Inf.MemberDAOInf;
+import library.datastorage.DatabaseConnection;
 import library.domain.Copy;
 import library.domain.Loan;
 import library.domain.Member;
@@ -40,21 +41,19 @@ import java.util.List;
 public class MySqlLoanDAO implements LoanDAOInf
 {
     private DatabaseConnection databaseConnection;
-    private MemberDAOInf memberDAO;
-    private CopyDAOInf copyDAO;
 
     public MySqlLoanDAO()
     {
         databaseConnection = new DatabaseConnection();
-        memberDAO = new MySqlMemberDAO();
-        copyDAO = new MySqlCopyDAO();
     }
 
     /**
      * View the details of all the loans.
      */
-    public List<Loan> details()
+    public List<Loan> findDetails()
     {
+        MemberDAOInf memberDAO = new MySqlMemberDAO();
+        CopyDAOInf copyDAO = new MySqlCopyDAO();
         List<Loan> result = new ArrayList<Loan>();
 
         try
@@ -62,26 +61,20 @@ public class MySqlLoanDAO implements LoanDAOInf
             databaseConnection.openConnection();
             ResultSet resultSet = databaseConnection.executeSQLSelectStatement("SELECT * FROM `loan` INNER JOIN `member` ON `loan`.`MemberID` = `member`.`MemberID` INNER JOIN `copy` ON `loan`.`CopyID` = `copy`.`CopyID` INNER JOIN `book` ON `copy`.`BookISBN`= `book`.`ISBN`;");
 
-            Timestamp returnedDate = resultSet.getTimestamp("ReturnedDate");
+            if (resultSet != null)
+            {
+                while (resultSet.next())
+                {
+                    Timestamp returnedDate = resultSet.getTimestamp("ReturnedDate");
+                    int memberID = resultSet.getInt("MemberID");
+                    int copyID = resultSet.getInt("CopyID");
+                    long ISBN = resultSet.getInt("ISBN");
+                    Copy copy = copyDAO.findDetails(copyID, ISBN);
+                    Member member = memberDAO.findDetails(memberID);
 
-            int memberID = resultSet.getInt("MemberID");
-            String firstName = resultSet.getString("FirstName");
-            String lastName = resultSet.getString("LastName");
-            String street = resultSet.getString("Street");
-            String houseNumber = resultSet.getString("HouseNumber");
-            String city = resultSet.getString("City");
-            String phoneNumber = resultSet.getString("PhoneNumber");
-            String emailAddress = resultSet.getString("EmailAddress");
-            double fine = resultSet.getDouble("Fine");
-
-            int copyID = resultSet.getInt("CopyID");
-            int lendingPeriod = resultSet.getInt("LendingPeriod");
-            long ISBN = resultSet.getInt("ISBN");
-            String title = resultSet.getString("Title");
-            String author = resultSet.getString("Author");
-            String edition = resultSet.getString("Edition");
-
-            result.add(new Loan(new Member(memberID, firstName, lastName, street, houseNumber, city, phoneNumber, emailAddress, fine), new Copy(copyID, lendingPeriod, new Book(ISBN, title, author, edition)), returnedDate));
+                    result.add(new Loan(member, copy, returnedDate));
+                }
+            }
         }
         catch (SQLException e)
         {
@@ -106,8 +99,11 @@ public class MySqlLoanDAO implements LoanDAOInf
      * @param memberID	The member ID of the reservation.
 	 * @param copyID	The ID of the copy.
 	 */
-	public Loan details(Timestamp loanDate, int memberID, int copyID)
+	public Loan findDetails(Timestamp loanDate, int memberID, int copyID)
 	{
+        MemberDAOInf memberDAO = new MySqlMemberDAO();
+        CopyDAOInf copyDAO = new MySqlCopyDAO();
+
         Loan result = null;
         Member member;
         Copy copy;
@@ -116,16 +112,24 @@ public class MySqlLoanDAO implements LoanDAOInf
         {
             databaseConnection.openConnection();
             ResultSet resultSet = databaseConnection.executeSQLSelectStatement("SELECT * FROM `loan` WHERE `LoanDate`=" + loanDate + " AND `memberID`=" + memberID + " AND `copyID`=" + copyID);
-            Timestamp returnedDate = resultSet.getTimestamp("ReturnedDate");
 
-            resultSet = databaseConnection.executeSQLSelectStatement("SELECT * FROM `book` WHERE `CopyID`=" + copyID + " AND `UpdatedDate`='" + loanDate + "';");
-            int ISBN = resultSet.getInt("ISBN");
-            databaseConnection.closeConnection();
+            if (resultSet != null)
+            {
+                Timestamp returnedDate = resultSet.getTimestamp("ReturnedDate");
 
-            copy = copyDAO.details(copyID, ISBN);
-            member = memberDAO.details(memberID);
+                resultSet = databaseConnection.executeSQLSelectStatement("SELECT * FROM `book` WHERE `CopyID`=" + copyID + " AND `UpdatedDate`='" + loanDate + "';");
 
-            result = new Loan(member, copy, returnedDate);
+                if (resultSet != null)
+                {
+                    int ISBN = resultSet.getInt("ISBN");
+                    databaseConnection.closeConnection();
+
+                    copy = copyDAO.findDetails(copyID, ISBN);
+                    member = memberDAO.findDetails(memberID);
+
+                    result = new Loan(member, copy, returnedDate);
+                }
+            }
         }
         catch (SQLException e)
         {
@@ -155,7 +159,6 @@ public class MySqlLoanDAO implements LoanDAOInf
         {
             try
             {
-                //LoanDate	ReturnedDate	MemberID	CopyID
                 databaseConnection.openConnection();
                 result = databaseConnection.executeSQLDMLStatement("INSERT INTO `loan` (ReturnedDate, MemberID, CopyID) VALUES ('" + loan.getReturnDate() + "', " + loan.getMember().getMemberID() + ", " + loan.getCopy().getCopyID() + ");");
             }
