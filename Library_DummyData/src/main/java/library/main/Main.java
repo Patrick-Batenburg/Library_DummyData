@@ -7,6 +7,7 @@ package library.main;
 import library.businesslogic.MemberAdminManager;
 import library.datastorage.DAO.Factory.DAOFactory;
 import library.datastorage.DAO.Factory.MySqlDAOFactory;
+import library.datastorage.DAO.Factory.TestDataDAOFactory;
 import library.presentation.MemberAdminUI;
 
 /**
@@ -21,6 +22,8 @@ public class Main {
     public static void main(String[] args)
     {
         DAOFactory mySqlDAOFactory = new MySqlDAOFactory();
+        DAOFactory testDataDAOFactory = new TestDataDAOFactory();
+
         MemberAdminManager manager = new MemberAdminManager(mySqlDAOFactory);
         MemberAdminUI ui = new MemberAdminUI(manager);
 
